@@ -2,14 +2,11 @@ from a2_q1 import *
 from a2_q2 import *
 from csp import *
 import time
-import math
 
 TEST_COUNTER = 1
 
 # number of teams, running time (seconds), # of assigned CSP variables # of unassigned CSP variables, ____________
 solution_results = [] 
-# of times prune() is called
-PRUNE_COUNTER = 0;
 
 # ______________________________________________________________________________
 class CSP(search.Problem):
@@ -24,6 +21,7 @@ class CSP(search.Problem):
         self.curr_domains = None
         self.nassigns = 0
         self.unassigns = 0
+        self.prune_count = 0 # of times prune function is called
 
     def assign(self, var, val, assignment):
         """Add {var: val} to assignment; Discard the old value if any."""
@@ -95,8 +93,7 @@ class CSP(search.Problem):
     def prune(self, var, value, removals):
         """Rule out var=value."""
         self.curr_domains[var].remove(value)
-        global PRUNE_COUNTER
-        PRUNE_COUNTER += 1
+        self.prune_count += 1
         if removals is not None:
             removals.append((var, value))
 
@@ -171,11 +168,11 @@ def run_q3():
         print("Running time of the solver: %f"%(elapsed_time))
         print("Number of times CSP variables were assigned: %d"%(csp.nassigns))
         print("Number of times CSP variables were unassigned: %d"%(csp.unassigns))
-        print("Number of times the prune() function is called: %d"%(PRUNE_COUNTER))
+        print("Number of times the prune() function is called: %d"%(csp.prune_count))
         print("Check generated teams results: %s\n"%(check_teams_result))
 
         # Variable to hold solution results to be processed in a .csv file
-        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, PRUNE_COUNTER])
+        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, csp.prune_count])
 
     TEST_COUNTER+=1
 
