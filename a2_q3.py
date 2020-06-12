@@ -2,11 +2,14 @@ from a2_q1 import *
 from a2_q2 import *
 from csp import *
 import time
+import math
 
 TEST_COUNTER = 1
 
 # number of teams, running time (seconds), # of assigned CSP variables # of unassigned CSP variables, ____________
 solution_results = [] 
+# of times prune() is called
+PRUNE_COUNTER = 0;
 
 # ______________________________________________________________________________
 class CSP(search.Problem):
@@ -92,6 +95,8 @@ class CSP(search.Problem):
     def prune(self, var, value, removals):
         """Rule out var=value."""
         self.curr_domains[var].remove(value)
+        global PRUNE_COUNTER
+        PRUNE_COUNTER += 1
         if removals is not None:
             removals.append((var, value))
 
@@ -138,53 +143,45 @@ def run_q3():
     print("====================================================================================\n\n")
 
     for graph in graphs:
-        result = None
-        i = 32
-
+        result = not None
         start_time = time.time()
-
-        groupNames = list(range(i))
-        csp = MapColoringCSP(groupNames, graph)  
-        AC3(csp)
-        result = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=forward_checking)
-
-        while(result != None):
-            i-=1
+        for i in range(31, 0, -1): #countdown from 31 to 1     
             groupNames = list(range(i))
             csp = MapColoringCSP(groupNames, graph)
-            AC3(csp)
-            result = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=forward_checking)
+            solvable = AC3(csp)
 
-        groupNames = list(range(i+1))
-        csp = MapColoringCSP(groupNames, graph)
-        AC3(csp)
-        result = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=forward_checking)
+            if not solvable:
+                continue
+            result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
+            if result == None:
+                groupNames = list(range(i+1))
+                csp = MapColoringCSP(groupNames, graph)
+
+                AC3(csp)
+                result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
+                break
+       
         elapsed_time = time.time() - start_time # running time of the solver
 
         teams = set(result.values())
         numTeams = len(teams) # number of teams that the people are divided into
-
-        vals = list(result.values())
-        numPeoplePerTeam = dict((x,vals.count(x)) for x in set(vals)).values()
-        sum = 0
-        for i in numPeoplePerTeam:
-            sum+=i
-        average = sum/count(numPeoplePerTeam)
+        check_teams_result=check_teams(graph, result)
 
         print("Number of teams that the people are divided into: %d"%(numTeams))
         print("Running time of the solver: %f"%(elapsed_time))
         print("Number of times CSP variables were assigned: %d"%(csp.nassigns))
         print("Number of times CSP variables were unassigned: %d"%(csp.unassigns))
-        print("Average number of people in a team: %.2f\n"%(average))
+        print("Number of times the prune() function is called: %d"%(PRUNE_COUNTER))
+        print("Check generated teams results: %s\n"%(check_teams_result))
 
         # Variable to hold solution results to be processed in a .csv file
-        solution_results.append([numTeams, elapsed_time, csp.nassigns, csp.unassigns, average])
+        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, PRUNE_COUNTER])
 
     TEST_COUNTER+=1
 
 # Test Question 3
 # ______________________________________________________________________________
-for i in range(7): 
+for i in range(5): 
     run_q3() 
 
 f2 = open('q3.csv', 'w')
