@@ -1,3 +1,4 @@
+#min_conflicts function in CSP
 from a2_q1 import *
 from a2_q2 import *
 from csp import *
@@ -7,6 +8,9 @@ TEST_COUNTER = 1
 
 # number of teams, running time (seconds), # of assigned CSP variables # of unassigned CSP variables, ____________
 solution_results = [] 
+
+# total number of conflicts in min_conflicts 
+NUM_CONFLICTS = 0
 
 # ______________________________________________________________________________
 class CSP(search.Problem):
@@ -21,7 +25,6 @@ class CSP(search.Problem):
         self.curr_domains = None
         self.nassigns = 0
         self.unassigns = 0
-        self.prune_count = 0 # of times prune function is called
 
     def assign(self, var, val, assignment):
         """Add {var: val} to assignment; Discard the old value if any."""
@@ -93,7 +96,6 @@ class CSP(search.Problem):
     def prune(self, var, value, removals):
         """Rule out var=value."""
         self.curr_domains[var].remove(value)
-        self.prune_count += 1
         if removals is not None:
             removals.append((var, value))
 
@@ -127,11 +129,41 @@ def MapColoringCSP(colors, neighbors):
     if isinstance(neighbors, str):
         neighbors = parse_neighbors(neighbors)
     return CSP(list(neighbors.keys()), UniversalDict(colors), neighbors, different_values_constraint)
+
+
+# ______________________________________________________________________________
+# Min-conflicts Hill Climbing search for CSPs
+
+
+def min_conflicts(csp, max_steps=1000):
+    """Solve a CSP by stochastic Hill Climbing on the number of conflicts."""
+    # Generate a complete assignment for all variables (probably with conflicts)
+    csp.current = current = {}
+    for var in csp.variables:
+        val = min_conflicts_value(csp, var, current)
+        csp.assign(var, val, current)
+    # Now repeatedly choose a random conflicted variable and change it
+    global NUM_CONFLICTS
+    for i in range(max_steps):
+        conflicted = csp.conflicted_vars(current)
+        if not conflicted:
+            return current
+        NUM_CONFLICTS +=1
+        var = random.choice(conflicted)
+        val = min_conflicts_value(csp, var, current)
+        csp.assign(var, val, current)
+    return None
+
+
+def min_conflicts_value(csp, var, current):
+    """Return the value that will give var the least number of conflicts.
+    If there is a tie, choose at random."""
+    return argmin_random_tie(csp.domains[var], key=lambda val: csp.nconflicts(var, val, current))
 # ______________________________________________________________________________
 
-def run_q3():
-    graphs = [rand_graph(0.1, 31), rand_graph(0.2, 31), rand_graph(0.3, 31),
-              rand_graph(0.4, 31), rand_graph(0.5, 31), rand_graph(0.6, 31)]
+def run_q4():
+    graphs = [rand_graph(0.1, 105), rand_graph(0.2, 105), rand_graph(0.3, 105),
+              rand_graph(0.4, 105), rand_graph(0.5, 105), rand_graph(0.6, 105)]
 
     global TEST_COUNTER
     print("RUNNING TEST RUN #%d"%(TEST_COUNTER))
@@ -140,24 +172,16 @@ def run_q3():
     for graph in graphs:
         result = not None
         start_time = time.time()
-        for i in range(31, 0, -1): #countdown from 31 to 1     
+        global NUM_CONFLICTS
+        NUM_CONFLICTS = 0
+        for i in range(1, 106, 1): #count up from 1 to 105
             groupNames = list(range(i))
             csp = MapColoringCSP(groupNames, graph)
-            solvable = AC3(csp)
-
-            if not solvable:
-                continue
-            result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
-            if result == None:
-                # we have found the largest # of teams that is not satisfiable. Increment counter to get 
-                # largest satisfiable team for the problem.
-                groupNames = list(range(i+1))
-                csp = MapColoringCSP(groupNames, graph)
-                AC3(csp)
-                result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
+            AC3(csp)
+            result = min_conflicts(csp)
+            if result != None:
                 break
-       
-        elapsed_time = time.time() - start_time # running time of the solver
+        elapsed_time = time.time() - start_time
 
         teams = set(result.values())
         numTeams = len(teams) # number of teams that the people are divided into
@@ -167,22 +191,22 @@ def run_q3():
         print("Running time of the solver: %f"%(elapsed_time))
         print("Number of times CSP variables were assigned: %d"%(csp.nassigns))
         print("Number of times CSP variables were unassigned: %d"%(csp.unassigns))
-        print("Number of times the prune() function is called: %d"%(csp.prune_count))
+        print("Number of attempts to resolve conflicts: %d"%(NUM_CONFLICTS))
         print("Check generated teams results: %s\n"%(check_teams_result))
 
         # Variable to hold solution results to be processed in a .csv file
-        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, csp.prune_count])
+        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, NUM_CONFLICTS])
 
     TEST_COUNTER+=1
 
-# Test Question 3
-# ______________________________________________________________________________
+# Test Question 4
+# _____________________________________________________________________
 for i in range(5): 
-    run_q3() 
+    run_q4() 
 
 # Write data to csv file for processing
 # _____________________________________________________________________
-f2 = open('q3.csv', 'w')
+f2 = open('q4.csv', 'w')
 for r in solution_results:
     for c in r:
         if type(c) == str:
