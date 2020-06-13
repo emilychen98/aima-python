@@ -24,6 +24,3 @@ def rand_graph(p, n):
                 list_f_f.append(friend) # add to list
                 graph[j] = list_f_f # update friend's friend list
     return graph
-                
-# rand_graph(0.1,5)
-
