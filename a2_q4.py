@@ -135,7 +135,7 @@ def MapColoringCSP(colors, neighbors):
 # Min-conflicts Hill Climbing search for CSPs
 
 
-def min_conflicts(csp, max_steps=1000):
+def min_conflicts(csp, max_steps=2000):
     """Solve a CSP by stochastic Hill Climbing on the number of conflicts."""
     # Generate a complete assignment for all variables (probably with conflicts)
     csp.current = current = {}
