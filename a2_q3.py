@@ -8,6 +8,9 @@ TEST_COUNTER = 1
 # number of teams, running time (seconds), # of assigned CSP variables # of unassigned CSP variables, ____________
 solution_results = [] 
 
+TOTAL_ASSIGNS = 0
+TOTAL_UNASSIGNS = 0
+
 # ______________________________________________________________________________
 class CSP(search.Problem):
     def __init__(self, variables, domains, neighbors, constraints):
@@ -138,6 +141,10 @@ def run_q3():
     print("====================================================================================\n\n")
 
     for graph in graphs:
+        global TOTAL_ASSIGNS
+        global TOTAL_UNASSIGNS
+        TOTAL_ASSIGNS = 0
+        TOTAL_UNASSIGNS = 0
         result = not None
         start_time = time.time()
         for i in range(31, 0, -1): #countdown from 31 to 1     
@@ -148,6 +155,8 @@ def run_q3():
             if not solvable:
                 continue
             result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
+            TOTAL_ASSIGNS+=csp.nassigns
+            TOTAL_UNASSIGNS+=csp.unassigns
             if result == None:
                 # we have found the largest # of teams that is not satisfiable. Increment counter to get 
                 # largest satisfiable team for the problem.
@@ -155,6 +164,8 @@ def run_q3():
                 csp = MapColoringCSP(groupNames, graph)
                 AC3(csp)
                 result = backtracking_search(csp, select_unassigned_variable=mrv, inference=forward_checking)
+                TOTAL_ASSIGNS+=csp.nassigns
+                TOTAL_UNASSIGNS+=csp.unassigns
                 break
        
         elapsed_time = time.time() - start_time # running time of the solver
@@ -165,13 +176,15 @@ def run_q3():
 
         print("Number of teams that the people are divided into: %d"%(numTeams))
         print("Running time of the solver: %f"%(elapsed_time))
-        print("Number of times CSP variables were assigned: %d"%(csp.nassigns))
-        print("Number of times CSP variables were unassigned: %d"%(csp.unassigns))
+        print("Number of times CSP variables were assigned for %d teams: %d"%(numTeams, csp.nassigns))
+        print("Number of times CSP variables were unassigned for %d teams: %d"%(numTeams, csp.unassigns))
+        print("Total Number of times CSP variables were assigned: %d"%(TOTAL_ASSIGNS))
+        print("Total Number of times CSP variables were unassigned: %d"%(TOTAL_UNASSIGNS))
         print("Number of times the prune() function is called: %d"%(csp.prune_count))
         print("Check generated teams results: %s\n"%(check_teams_result))
 
         # Variable to hold solution results to be processed in a .csv file
-        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, csp.prune_count])
+        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, TOTAL_ASSIGNS, TOTAL_UNASSIGNS, csp.prune_count])
 
     TEST_COUNTER+=1
 

@@ -12,6 +12,9 @@ solution_results = []
 # total number of conflicts in min_conflicts 
 NUM_CONFLICTS = 0
 
+TOTAL_ASSIGNS = 0
+TOTAL_UNASSIGNS = 0
+
 # ______________________________________________________________________________
 class CSP(search.Problem):
     def __init__(self, variables, domains, neighbors, constraints):
@@ -170,7 +173,12 @@ def run_q4():
     print("====================================================================================\n\n")
 
     for graph in graphs:
+        global TOTAL_ASSIGNS
+        global TOTAL_UNASSIGNS
+        TOTAL_ASSIGNS = 0
+        TOTAL_UNASSIGNS = 0
         result = not None
+
         start_time = time.time()
         global NUM_CONFLICTS
         NUM_CONFLICTS = 0
@@ -179,6 +187,8 @@ def run_q4():
             csp = MapColoringCSP(groupNames, graph)
             AC3(csp)
             result = min_conflicts(csp)
+            TOTAL_ASSIGNS+=csp.nassigns
+            TOTAL_UNASSIGNS+=csp.unassigns
             if result != None:
                 break
         elapsed_time = time.time() - start_time
@@ -189,13 +199,15 @@ def run_q4():
 
         print("Number of teams that the people are divided into: %d"%(numTeams))
         print("Running time of the solver: %f"%(elapsed_time))
-        print("Number of times CSP variables were assigned: %d"%(csp.nassigns))
-        print("Number of times CSP variables were unassigned: %d"%(csp.unassigns))
+        print("Number of times CSP variables were assigned for %d teams: %d"%(numTeams, csp.nassigns))
+        print("Number of times CSP variables were unassigned for %d teams: %d"%(numTeams, csp.unassigns))
+        print("Total Number of times CSP variables were assigned: %d"%(TOTAL_ASSIGNS))
+        print("Total Number of times CSP variables were unassigned: %d"%(TOTAL_UNASSIGNS))
         print("Number of attempts to resolve conflicts: %d"%(NUM_CONFLICTS))
         print("Check generated teams results: %s\n"%(check_teams_result))
 
         # Variable to hold solution results to be processed in a .csv file
-        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, NUM_CONFLICTS])
+        solution_results.append([str(graph), numTeams, elapsed_time, csp.nassigns, csp.unassigns, TOTAL_ASSIGNS, TOTAL_UNASSIGNS, NUM_CONFLICTS])
 
     TEST_COUNTER+=1
 
