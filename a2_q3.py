@@ -178,8 +178,8 @@ def run_q3():
         print("Running time of the solver: %f"%(elapsed_time))
         print("Number of times CSP variables were assigned for %d teams: %d"%(numTeams, csp.nassigns))
         print("Number of times CSP variables were unassigned for %d teams: %d"%(numTeams, csp.unassigns))
-        print("Total Number of times CSP variables were assigned: %d"%(TOTAL_ASSIGNS))
-        print("Total Number of times CSP variables were unassigned: %d"%(TOTAL_UNASSIGNS))
+        print("Total Number of times CSP variables were assigned during the duration of the solver: %d"%(TOTAL_ASSIGNS))
+        print("Total Number of times CSP variables were unassigned during the duration of the solver: %d"%(TOTAL_UNASSIGNS))
         print("Number of times the prune() function is called: %d"%(csp.prune_count))
         print("Check generated teams results: %s\n"%(check_teams_result))
 
