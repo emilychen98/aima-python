@@ -1,11 +1,14 @@
 ## a3.py
 import random
 
+#====================================================================================================================
+# Tic-Tac-Toe class
 class TicTacToe:
     def __init__(self):
         self.board = [' ',' ',' ',' ',' ',' ',' ',' ',' ']
-        self.turn = None
-        self.terminate = False
+        self.turn = None # Computer = 'C', User = 'U'
+        self.terminate = False # Game is complete
+        self.first = None
         
         choice = None
         while choice != "yes" and choice != "no":
@@ -13,8 +16,10 @@ class TicTacToe:
             print("\n")
             if choice == "yes":
                 self.turn = 'U'
+                self.first = 'U'
             elif choice == "no":
                 self.turn = 'C'
+                self.first = 'C'
 
     def displayBoard(self):
         for i, tile in enumerate(self.board):
@@ -31,6 +36,7 @@ class TicTacToe:
     def whoseTurn(self):
         return self.turn
 
+    # Display a readable interface with numbered tiles for user to choose a move 
     def showPossibleMoves(self):
         print("The numbered tiles below are the possible choices.\n")
         for i, tile in enumerate(self.board):
@@ -123,8 +129,12 @@ class TicTacToe:
         self.showPossibleMoves()
         moves = self.getPossibleMoves(None)
         choice = input("It's your turn. Input the number corresponding to your choice of tile placement: ")
-        while (not choice or int(choice)-1 not in moves):
-            choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
+
+        while (not choice or not choice.isdigit()):
+            if not choice.isdigit():
+                choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
+            elif int(choice)-1 not in moves:
+                choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
 
         print('\n')
         self.makeMove(choice)
@@ -134,28 +144,36 @@ class TicTacToe:
     def computersTurn(self):
         print("Opponent's deciding...\n")
         results = dict()
-        for i, tile in enumerate(self.board):
-            if tile == ' ':
-                result = self.doRandomPlayouts(i) # [W, T, L]
-                results[i] = 0.5*result[0]+result[1]-result[2]
-        max_index = max(results, key=results.get)
-        self.makeMove(max_index+1) # map true index to a tile 1-9
+        index = 0
+        # offensive
+        if self.first == 'C':
+            for i, tile in enumerate(self.board):
+                if tile == ' ':
+                    result = self.doRandomPlayouts(i) # [W, T, L]
+                    results[i] = result[2]
+            index = min(results, key=results.get)
+                    
+        # defensive
+        else:
+            for i, tile in enumerate(self.board):
+                if tile == ' ':
+                    result = self.doRandomPlayouts(i) # [W, T, L]
+                    results[i] = result[0]+result[1]-10*result[2]
+            index = max(results, key=results.get)
+        self.makeMove(index+1) # map true index to a tile 1-9
         self.displayBoard()
         self.turn = 'U'
 
-    #make a list of all legal moves. For each of the moves it does some number of random playouts
-    #where the computer simulates playing the game until it is over. During a random playout, 
-    #the computer makes random moves for each player until a win, loss, or draw is reached. When a playout is done, 
-    #the result (win, loss, or draw) is recorded, and then some more random playouts are done. After random playouts 
-    #are done for all legal moves, it choses the move that resulted in the greatest number of wins 
-    #(or least number of losses, or most number of wins + draws, etc. — 
-
+    # Do a number of random playouts where the computer simulates playing the game until 
+    # it is over by making random moves for each player until a win, loss, or draw is reached. When a playout is done, 
+    # the result (win, loss, or draw) is recorded, and then some more random playouts are done. After random playouts 
+    # are done for all legal moves, it choses the move that results in ___________________________
     def doRandomPlayouts(self,pos):
         wins = 0
         ties = 0
         losts = 0
 
-        for i in range(10000):
+        for i in range(300):
             sim_board = self.board[:] #copy list
             sim_board[pos] = 'O'
             p = 'U'
@@ -200,16 +218,21 @@ class TicTacToe:
                 moves.append(i)
         return moves
 
-replay = True
-while replay:
-    game = TicTacToe()
-    while not game.terminate:
-        if game.whoseTurn() == 'U':
-            game.usersTurn()
-        else:
-            game.computersTurn()
+#====================================================================================================================
+def play_a_new_game():
+    replay = True
+    while replay:
+        game = TicTacToe()
+        while not game.terminate:
+            if game.whoseTurn() == 'U':
+                game.usersTurn()
+            else:
+                game.computersTurn()
 
-    choice = input("Would you like to play another game? Enter 'yes' to replay or any character to exit:  ")
-    if choice != "yes":
-        replay = False
-    print("\n")
+        choice = input("Would you like to play another game? Enter 'yes' to replay or any character to exit:  ")
+        if choice != "yes":
+            replay = False
+        print("\n")
+
+if __name__ == '__main__':
+    play_a_new_game()
