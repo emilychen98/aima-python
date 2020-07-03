@@ -152,7 +152,7 @@ class TicTacToe:
         ties = 0
         losts = 0
 
-        for i in range(50): # 50 random playouts
+        for i in range(100): # 100 random playouts
             sim_board = self.board[:] #copy list
             sim_board[pos] = 'O'
             p = 'U'
