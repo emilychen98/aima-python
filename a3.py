@@ -6,21 +6,10 @@ import random
 class TicTacToe:
     def __init__(self):
         self.board = [' ',' ',' ',' ',' ',' ',' ',' ',' ']
-        self.turn = None # Computer = 'C', User = 'U'
+        self.turn = 'C' # Computer = 'C'
         self.terminate = False # Game is complete
-        self.first = None
+        self.first = 'C'
         
-        choice = None
-        while choice != "yes" and choice != "no":
-            choice = input("Would you like to go first? (yes/no): ")
-            print("\n")
-            if choice == "yes":
-                self.turn = 'U'
-                self.first = 'U'
-            elif choice == "no":
-                self.turn = 'C'
-                self.first = 'C'
-
     def displayBoard(self):
         for i, tile in enumerate(self.board):
             if (i+1)%3 == 0 or i==8:
@@ -130,11 +119,8 @@ class TicTacToe:
         moves = self.getPossibleMoves(None)
         choice = input("It's your turn. Input the number corresponding to your choice of tile placement: ")
 
-        while (not choice or not choice.isdigit()):
-            if not choice.isdigit():
-                choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
-            elif int(choice)-1 not in moves:
-                choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
+        while (int(choice)-1 not in moves):
+            choice = input("Invalid move. Input the number corresponding to your choice of tile placement: ")
 
         print('\n')
         self.makeMove(choice)
@@ -145,21 +131,14 @@ class TicTacToe:
         print("Opponent's deciding...\n")
         results = dict()
         index = 0
+
         # offensive
-        if self.first == 'C':
-            for i, tile in enumerate(self.board):
-                if tile == ' ':
-                    result = self.doRandomPlayouts(i) # [W, T, L]
-                    results[i] = result[2]
-            index = min(results, key=results.get)
+        for i, tile in enumerate(self.board):
+            if tile == ' ':
+                result = self.doRandomPlayouts(i) # [W, T, L]
+                results[i] = result[2]
+        index = min(results, key=results.get)
                     
-        # defensive
-        else:
-            for i, tile in enumerate(self.board):
-                if tile == ' ':
-                    result = self.doRandomPlayouts(i) # [W, T, L]
-                    results[i] = result[0]+result[1]-10*result[2]
-            index = max(results, key=results.get)
         self.makeMove(index+1) # map true index to a tile 1-9
         self.displayBoard()
         self.turn = 'U'
@@ -173,7 +152,7 @@ class TicTacToe:
         ties = 0
         losts = 0
 
-        for i in range(300):
+        for i in range(50): # 50 random playouts
             sim_board = self.board[:] #copy list
             sim_board[pos] = 'O'
             p = 'U'
